@@ -12,6 +12,7 @@ from backend.database.connection import Base, engine
 from backend.models import user
 from backend.models import conversation
 from backend.models import message
+from backend.models import memory
 
 
 # Create database tables

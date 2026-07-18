@@ -1,31 +1,94 @@
-from google import genai
+from openai import OpenAI
+
+from sqlalchemy.orm import Session
 
 from backend.config.settings import settings
-
-
-client = genai.Client(
-    api_key=settings.GEMINI_API_KEY
+from backend.services.memory_service import (
+    save_memory,
+    get_memory
 )
 
 
-def generate_ai_response(message: str):
+client = OpenAI(
+    api_key=settings.OPENAI_API_KEY
+)
+
+
+def generate_ai_response(
+    message: str,
+    user_id: int = None,
+    db: Session = None
+):
 
     try:
 
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=message
+        memory_context = ""
+
+        if user_id and db:
+
+            user_memory = get_memory(
+                db,
+                user_id,
+                "user_info"
+            )
+
+            if user_memory:
+
+                memory_context = (
+                    "\nRemembered information: "
+                    + user_memory.memory_value
+                )
+
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content":
+                    "You are SCORE AI Assistant."
+                    + memory_context
+                },
+                {
+                    "role": "user",
+                    "content": message
+                }
+            ]
         )
 
-        return response.text
+
+        ai_response = (
+            response
+            .choices[0]
+            .message
+            .content
+        )
 
 
-    except Exception:
+        if user_id and db:
 
-        # Temporary fallback until Gemini quota is enabled
+            if "my name is" in message.lower():
+
+                name = (
+                    message.lower()
+                    .replace("my name is", "")
+                    .strip()
+                )
+
+                save_memory(
+                    db,
+                    user_id,
+                    "user_info",
+                    "User name is " + name
+                )
+
+
+        return ai_response
+
+
+    except Exception as e:
+
         return (
-            "SCORE AI Assistant received your message: "
-            + message
-            + ". "
-            "I am currently running in development mode."
+            "SCORE AI development mode. Error: "
+            + str(e)
         )

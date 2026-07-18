@@ -16,5 +16,5 @@ def profile(
 
     return {
         "message": "Profile accessed successfully",
-        "email": current_user["sub"]
+        "user": current_user
     }

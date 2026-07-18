@@ -1,0 +1,145 @@
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background:#f5f8ff;
+  color:#1a1a1a;
+}
+
+
+/* Navbar */
+
+.navbar{
+
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:20px 50px;
+background:#0b1f3a;
+color:white;
+
+}
+
+
+.navbar a{
+
+color:white;
+margin:0 15px;
+text-decoration:none;
+
+}
+
+
+.navbar button{
+
+padding:10px 20px;
+border:none;
+border-radius:5px;
+cursor:pointer;
+
+}
+
+
+/* Hero */
+
+.hero{
+
+text-align:center;
+padding:80px 20px;
+
+}
+
+
+.hero h1{
+
+font-size:45px;
+color:#0b1f3a;
+
+}
+
+
+.hero p{
+
+font-size:18px;
+max-width:700px;
+margin:auto;
+
+}
+
+
+.hero button{
+
+margin-top:30px;
+padding:14px 30px;
+background:#00bfa6;
+border:none;
+border-radius:8px;
+color:white;
+font-size:16px;
+
+}
+
+
+
+/* Features */
+
+#features{
+
+padding:50px;
+
+}
+
+
+.features-container{
+
+display:flex;
+gap:30px;
+justify-content:center;
+
+}
+
+
+.feature-card{
+
+background:white;
+padding:25px;
+width:250px;
+border-radius:12px;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+
+}
+
+
+
+/* CTA */
+
+.cta{
+
+text-align:center;
+padding:60px;
+background:#0b1f3a;
+color:white;
+
+}
+
+
+.cta button{
+
+padding:12px 25px;
+background:#00bfa6;
+border:none;
+border-radius:6px;
+
+}
+
+
+
+/* Footer */
+
+footer{
+
+text-align:center;
+padding:20px;
+background:#111;
+color:white;
+
+}

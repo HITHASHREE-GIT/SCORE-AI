@@ -7,7 +7,7 @@ class Settings(BaseSettings):
 
     JWT_SECRET_KEY: str
 
-    GEMINI_API_KEY: str
+    OPENAI_API_KEY: str
 
 
     class Config:
