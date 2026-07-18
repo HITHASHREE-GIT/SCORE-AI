@@ -4,7 +4,9 @@ from jose import JWTError, jwt
 
 
 SECRET_KEY = "score_ai_secret_key_change_later"
+
 ALGORITHM = "HS256"
+
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 
@@ -17,9 +19,12 @@ def create_access_token(data: dict):
         minutes=ACCESS_TOKEN_EXPIRE_MINUTES
     )
 
-    to_encode.update({
-        "exp": expire
-    })
+    to_encode.update(
+        {
+            "exp": expire
+        }
+    )
+
 
     token = jwt.encode(
         to_encode,
@@ -42,6 +47,7 @@ def verify_token(token: str):
         )
 
         return payload
+
 
     except JWTError:
 

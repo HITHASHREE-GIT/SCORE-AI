@@ -1,30 +1,17 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
 
-    # Application
-    APP_NAME: str = "SCORE AI"
-    APP_VERSION: str = "1.0.0"
+    DATABASE_URL: str
 
-    # Environment
-    APP_ENV: str = "development"
-    APP_HOST: str = "127.0.0.1"
-    APP_PORT: int = 8000
+    JWT_SECRET_KEY: str
 
-    # Database
-    DATABASE_URL: str = "sqlite:///./score.db"
-
-    # Security
-    SECRET_KEY: str = "score-ai-secret-key"
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    GEMINI_API_KEY: str
 
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        extra="ignore"
-    )
+    class Config:
+        env_file = ".env"
 
 
 settings = Settings()

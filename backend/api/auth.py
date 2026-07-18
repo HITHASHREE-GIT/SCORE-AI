@@ -70,10 +70,6 @@ def register(
         "user_id": new_user.id
 
     }
-
-
-
-
 @router.post("/login")
 def login(
 
@@ -83,13 +79,11 @@ def login(
 
 ):
 
-
     db_user = db.query(User).filter(
 
         User.email == user.email
 
     ).first()
-
 
 
     if not db_user:
@@ -103,7 +97,6 @@ def login(
         )
 
 
-
     if not verify_password(
 
         user.password,
@@ -111,7 +104,6 @@ def login(
         db_user.hashed_password
 
     ):
-
 
         raise HTTPException(
 
@@ -122,24 +114,24 @@ def login(
         )
 
 
+    # Create JWT token with user id and email
 
     access_token = create_access_token(
 
         data={
 
-            "sub": db_user.email
+            "sub": str(db_user.id),
+
+            "email": db_user.email
 
         }
 
     )
 
 
-
     return {
 
-
         "access_token": access_token,
-
 
         "token_type": "bearer"
 
