@@ -1,62 +1,107 @@
-\# SCORE AI 🚀
+# 🚀 SCORE AI
 
+## Smart Conversational AI Platform
 
+SCORE AI is an AI-powered conversational platform built with **FastAPI, React, and Generative AI technologies**.  
+The system provides secure user authentication, conversation management, AI-powered messaging, and memory-based interactions.
 
-\## Smart Cognitive Orchestration and Reasoning Engine
+---
 
+# ✨ Features
 
+## 🔐 Authentication
+- User registration
+- Secure login system
+- JWT-based authentication
+- Protected API routes
 
-SCORE AI is an AI-powered backend platform designed for intelligent reasoning, retrieval, evaluation, and agent-based workflows.
+## 💬 AI Conversation System
+- Create conversations
+- Send messages
+- Store chat history
+- AI response generation
 
+## 🧠 Memory System
+- User conversation memory
+- Context-aware interactions
+- Persistent memory storage
 
+## 🌐 Frontend Interface
+- Modern React UI
+- Dashboard interface
+- Chat-based interaction design
 
-\## Features
+---
 
+# 🏗️ System Architecture
+            User
+             |
+             |
+      React Frontend
+             |
+             |
+      FastAPI Backend
+             |
+  ---------------------
+  |         |         |
 
+---
 
-\### Authentication
+# 🛠️ Tech Stack
 
-\- User Registration
+## Backend
+- Python
+- FastAPI
+- SQLAlchemy
+- Pydantic
+- JWT Authentication
 
-\- Secure Password Hashing
+## Frontend
+- React
+- Vite
+- JavaScript
+- CSS
 
-\- JWT Authentication
+## Database
+- SQLite
 
-\- Protected APIs
+## AI Integration
+- OpenAI API
+- Generative AI Agent
 
+---
 
+# 📂 Project Structure
+SCORE/
+│
+├── backend/
+│ ├── agents/
+│ ├── api/
+│ ├── config/
+│ ├── database/
+│ ├── models/
+│ ├── services/
+│ └── main.py
+│
+├── frontend/
+│ ├── src/
+│ ├── components/
+│ └── pages/
+│
+├── architecture/
+├── docs/
+├── datasets/
+├── tests/
+│
+├── requirements.txt
+├── README.md
+└── .env.example
 
-\### Backend
+---
 
-\- FastAPI Framework
+# ⚙️ Installation
 
-\- SQLAlchemy Database Layer
+## 1. Clone Repository
 
-\- SQLite Database
-
-
-
-\### AI Architecture
-
-
-
-Modules:
-
-
-
-\- AI Agents
-
-\- Knowledge Retrieval
-
-\- Reasoning Graph
-
-\- Evaluation Engine
-
-\- Cache Layer
-
-
-
-\## Project Structure
-
-
-
+```bash
+git clone <your-repository-url>
