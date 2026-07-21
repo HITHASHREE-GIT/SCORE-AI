@@ -1,15 +1,16 @@
 from fastapi import APIRouter
 
+router = APIRouter(prefix="/routes", tags=["routes"])
 
-router = APIRouter(
-    tags=["General"]
-)
-
-
-@router.get("/status")
-def status():
-
+@router.get("/")
+def get_routes():
     return {
-        "message": "SCORE AI API is running",
-        "status": "active"
+        "routes": [
+            "/auth/register",
+            "/auth/login",
+            "/conversations",
+            "/conversations/{id}",
+            "/messages",
+            "/messages/conversation/{id}"
+        ]
     }

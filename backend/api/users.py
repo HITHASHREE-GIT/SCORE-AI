@@ -1,20 +1,25 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
-from backend.security.dependencies import get_current_user
+router = APIRouter(prefix="/users", tags=["users"])
 
+class UserResponse(BaseModel):
+    id: int
+    name: str
+    email: str
 
-router = APIRouter(
-    prefix="/users",
-    tags=["Users"]
-)
+# Temporary user storage
+users_db = {
+    1: {"id": 1, "name": "Test User", "email": "test@example.com"}
+}
 
+@router.get("/profile", response_model=UserResponse)
+def get_profile():
+    # For now return the test user
+    return users_db[1]
 
-@router.get("/profile")
-def profile(
-    current_user = Depends(get_current_user)
-):
-
-    return {
-        "message": "Profile accessed successfully",
-        "user": current_user
-    }
+@router.get("/{user_id}", response_model=UserResponse)
+def get_user(user_id: int):
+    if user_id not in users_db:
+        raise HTTPException(status_code=404, detail="User not found")
+    return users_db[user_id]

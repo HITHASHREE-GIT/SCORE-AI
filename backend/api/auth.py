@@ -1,138 +1,65 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+import hashlib
+import jwt
+import datetime
 
+router = APIRouter(prefix="/auth", tags=["auth"])
 
-from backend.database.connection import get_db
-from backend.models.user import User
-from backend.schemas.user_schema import UserCreate, UserLogin
+SECRET_KEY = "your-secret-key-change-this"
+ALGORITHM = "HS256"
 
-from backend.security.password import (
-    hash_password,
-    verify_password
-)
+class UserRegister(BaseModel):
+    name: str
+    email: str
+    password: str
 
-from backend.security.jwt import (
-    create_access_token
-)
+class UserLogin(BaseModel):
+    email: str
+    password: str
 
+# Temporary in-memory database
+users_db = {}
 
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
 
-router = APIRouter(
-    prefix="/auth",
-    tags=["Authentication"]
-)
-
-
+def create_token(email: str) -> str:
+    payload = {
+        "email": email,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 @router.post("/register")
-def register(
-    user: UserCreate,
-    db: Session = Depends(get_db)
-):
-
-    existing_user = db.query(User).filter(
-        User.email == user.email
-    ).first()
-
-
-    if existing_user:
-
-        raise HTTPException(
-            status_code=400,
-            detail="Email already registered"
-        )
-
-
-    new_user = User(
-
-        username=user.username,
-
-        email=user.email,
-
-        hashed_password=hash_password(
-            user.password
-        )
-
-    )
-
-
-    db.add(new_user)
-
-    db.commit()
-
-    db.refresh(new_user)
-
-
-    return {
-
-        "message": "User registered successfully",
-
-        "user_id": new_user.id
-
+def register(user: UserRegister):
+    if user.email in users_db:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    users_db[user.email] = {
+        "name": user.name,
+        "email": user.email,
+        "password": hash_password(user.password)
     }
-@router.post("/login")
-def login(
-
-    user: UserLogin,
-
-    db: Session = Depends(get_db)
-
-):
-
-    db_user = db.query(User).filter(
-
-        User.email == user.email
-
-    ).first()
-
-
-    if not db_user:
-
-        raise HTTPException(
-
-            status_code=404,
-
-            detail="User not found"
-
-        )
-
-
-    if not verify_password(
-
-        user.password,
-
-        db_user.hashed_password
-
-    ):
-
-        raise HTTPException(
-
-            status_code=401,
-
-            detail="Invalid password"
-
-        )
-
-
-    # Create JWT token with user id and email
-
-    access_token = create_access_token(
-
-        data={
-
-            "sub": str(db_user.id),
-
-            "email": db_user.email
-
-        }
-
-    )
-
-
+    
+    token = create_token(user.email)
     return {
-
-        "access_token": access_token,
-
+        "message": "User registered successfully",
+        "access_token": token,
         "token_type": "bearer"
+    }
 
+@router.post("/login")
+def login(user: UserLogin):
+    if user.email not in users_db:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    stored_user = users_db[user.email]
+    if stored_user["password"] != hash_password(user.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    token = create_token(user.email)
+    return {
+        "access_token": token,
+        "token_type": "bearer"
     }

@@ -1,108 +1,44 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from typing import List, Optional
+from datetime import datetime
 
-from backend.database.connection import get_db
+router = APIRouter(prefix="/messages", tags=["messages"])
 
-from backend.models.message import Message
-from backend.models.conversation import Conversation
+# In-memory storage
+messages_db = []
+message_id_counter = 1
 
-from backend.schemas.message_schema import (
-    MessageCreate,
-    MessageResponse
-)
+class MessageCreate(BaseModel):
+    conversation_id: int
+    role: str  # "user" or "assistant"
+    content: str
 
-from backend.security.dependencies import get_current_user
+class MessageResponse(BaseModel):
+    id: int
+    conversation_id: int
+    role: str
+    content: str
+    created_at: str
 
-from backend.agents.ai_agent import generate_ai_response
-
-
-router = APIRouter(
-    prefix="/conversations",
-    tags=["Messages"]
-)
-
-
-@router.post("/{conversation_id}/messages")
-def send_message(
-    conversation_id: int,
-    data: MessageCreate,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
-
-    # Check conversation ownership
-
-    conversation = db.query(Conversation).filter(
-        Conversation.id == conversation_id,
-        Conversation.user_id == current_user["id"]
-    ).first()
-
-
-    if not conversation:
-
-        raise HTTPException(
-            status_code=404,
-            detail="Conversation not found"
-        )
-
-
-    # Save user message
-
-    user_message = Message(
-        conversation_id=conversation_id,
-        sender="user",
-        content=data.content
-    )
-
-
-    db.add(user_message)
-    db.commit()
-    db.refresh(user_message)
-
-
-
-    # Generate AI response
-
-    ai_reply = generate_ai_response(
-        data.content
-    )
-
-
-
-    # Save AI message
-
-    ai_message = Message(
-        conversation_id=conversation_id,
-        sender="ai",
-        content=ai_reply
-    )
-
-
-    db.add(ai_message)
-    db.commit()
-    db.refresh(ai_message)
-
-
-
-    # Clean JSON response
-
-    return {
-
-        "conversation_id": conversation_id,
-
-        "user_message": {
-            "id": user_message.id,
-            "sender": user_message.sender,
-            "content": user_message.content,
-            "created_at": user_message.created_at
-        },
-
-
-        "ai_message": {
-            "id": ai_message.id,
-            "sender": ai_message.sender,
-            "content": ai_message.content,
-            "created_at": ai_message.created_at
-        }
-
+@router.post("/", response_model=MessageResponse)
+def create_message(message: MessageCreate):
+    global message_id_counter
+    new_message = {
+        "id": message_id_counter,
+        "conversation_id": message.conversation_id,
+        "role": message.role,
+        "content": message.content,
+        "created_at": datetime.now().isoformat()
     }
+    messages_db.append(new_message)
+    message_id_counter += 1
+    return new_message
+
+@router.get("/conversation/{conversation_id}", response_model=List[MessageResponse])
+def get_messages_by_conversation(conversation_id: int):
+    return [msg for msg in messages_db if msg["conversation_id"] == conversation_id]
+
+@router.get("/", response_model=List[MessageResponse])
+def get_all_messages():
+    return messages_db

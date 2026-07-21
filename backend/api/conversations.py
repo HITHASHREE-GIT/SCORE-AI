@@ -1,48 +1,47 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from typing import List, Optional
+from datetime import datetime
 
-from backend.database.connection import get_db
-from backend.models.conversation import Conversation
-from backend.schemas.conversation_schema import (
-    ConversationCreate,
-    ConversationResponse
-)
-from backend.security.dependencies import get_current_user
+router = APIRouter(prefix="/conversations", tags=["conversations"])
 
+# In-memory storage
+conversations_db = []
+conversation_id_counter = 1
 
-router = APIRouter(
-    prefix="/conversations",
-    tags=["Conversations"]
-)
+class ConversationCreate(BaseModel):
+    title: str
+    user_id: int
 
+class ConversationResponse(BaseModel):
+    id: int
+    title: str
+    user_id: int
+    created_at: str
+    updated_at: str
 
 @router.post("/", response_model=ConversationResponse)
-def create_conversation(
-    data: ConversationCreate,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
+def create_conversation(conversation: ConversationCreate):
+    global conversation_id_counter
+    now = datetime.now().isoformat()
+    new_conversation = {
+        "id": conversation_id_counter,
+        "title": conversation.title,
+        "user_id": conversation.user_id,
+        "created_at": now,
+        "updated_at": now
+    }
+    conversations_db.append(new_conversation)
+    conversation_id_counter += 1
+    return new_conversation
 
-    conversation = Conversation(
-        title=data.title,
-        user_id=current_user["id"]
-    )
+@router.get("/", response_model=List[ConversationResponse])
+def get_conversations():
+    return conversations_db
 
-    db.add(conversation)
-    db.commit()
-    db.refresh(conversation)
-
-    return conversation
-
-
-@router.get("/", response_model=list[ConversationResponse])
-def get_conversations(
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
-
-    conversations = db.query(Conversation).filter(
-        Conversation.user_id == current_user["id"]
-    ).all()
-
-    return conversations
+@router.get("/{conversation_id}", response_model=ConversationResponse)
+def get_conversation(conversation_id: int):
+    for conv in conversations_db:
+        if conv["id"] == conversation_id:
+            return conv
+    raise HTTPException(status_code=404, detail="Conversation not found")
