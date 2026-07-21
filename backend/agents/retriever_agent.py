@@ -1,5 +1,5 @@
 from agents.base_agent import BaseAgent
-from services.vector_service import vector_service
+from services.simple_vector_service import vector_service
 from typing import Dict, Any
 
 class RetrieverAgent(BaseAgent):
