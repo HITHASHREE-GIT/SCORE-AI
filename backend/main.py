@@ -13,10 +13,18 @@ app = FastAPI(title="SCORE AI API", version="2.0.0")
 # Setup rate limiting
 setup_rate_limiting(app)
 
-# CORS Configuration
+# CORS Configuration - Add your production URLs here
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://localhost:8501"],
+    allow_origins=[
+        "http://localhost:5173", 
+        "http://localhost:5174", 
+        "http://127.0.0.1:5173", 
+        "http://localhost:8501",
+        # Add your production URLs below
+        # "https://your-frontend.vercel.app",
+        # "https://score-ai-backend.onrender.com"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
