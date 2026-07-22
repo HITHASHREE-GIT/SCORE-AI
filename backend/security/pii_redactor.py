@@ -1,34 +1,43 @@
-from presidio_analyzer import AnalyzerEngine
-from presidio_anonymizer import AnonymizerEngine
-from typing import List, Dict
+import spacy
 
-class PIIRedactor:
-    def __init__(self):
-        self.analyzer = AnalyzerEngine()
-        self.anonymizer = AnonymizerEngine()
-    
-    def analyze_text(self, text: str) -> List[Dict]:
-        """Analyze text for PII"""
-        results = self.analyzer.analyze(text=text, language='en')
-        return [{
-            "entity_type": result.entity_type,
-            "start": result.start,
-            "end": result.end,
-            "score": result.score
-        } for result in results]
-    
-    def redact_text(self, text: str) -> str:
-        """Redact PII from text"""
-        results = self.analyzer.analyze(text=text, language='en')
-        anonymized = self.anonymizer.anonymize(
+from presidio_analyzer import AnalyzerEngine
+from presidio_analyzer.nlp_engine import SpacyNlpEngine
+from presidio_anonymizer import AnonymizerEngine
+
+
+# Use small model instead of 400MB large model
+nlp_engine = SpacyNlpEngine(
+    models=[
+        {
+            "lang_code": "en",
+            "model_name": "en_core_web_sm"
+        }
+    ]
+)
+
+analyzer = AnalyzerEngine(
+    nlp_engine=nlp_engine
+)
+
+anonymizer = AnonymizerEngine()
+
+
+def pii_redactor(text: str):
+
+    if not text:
+        return text
+
+    results = analyzer.analyze(
+        text=text,
+        language="en"
+    )
+
+    if results:
+        anonymized = anonymizer.anonymize(
             text=text,
             analyzer_results=results
         )
-        return anonymized.text
-    
-    def has_pii(self, text: str) -> bool:
-        """Check if text contains PII"""
-        results = self.analyzer.analyze(text=text, language='en')
-        return len(results) > 0
 
-pii_redactor = PIIRedactor()
+        return anonymized.text
+
+    return text
