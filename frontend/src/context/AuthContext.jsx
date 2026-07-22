@@ -1,92 +1,274 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import api from '../services/api';
+import React, { useState } from "react";
+import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
-const AuthContext = createContext();
+function Dashboard() {
+  const { user, logout } = useAuth();
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+  const [message, setMessage] = useState("");
+  const [chat, setChat] = useState([]);
+  const [conversationId, setConversationId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('token'));
 
-  useEffect(() => {
-    if (token) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchUser();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
-
-  const fetchUser = async () => {
+  // Create conversation
+  const createConversation = async () => {
     try {
-      const response = await api.get('/users/profile');
-      setUser(response.data);
-    } catch (error) {
-      console.error('Failed to fetch user:', error);
-      logout();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const login = async (email, password) => {
-    try {
-      const response = await api.post('/auth/login', { email, password });
-      const { access_token } = response.data;
-      
-      localStorage.setItem('token', access_token);
-      setToken(access_token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-      
-      await fetchUser();
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.detail || 'Login failed');
-    }
-  };
-
-  const register = async (name, email, password) => {
-    try {
-      const response = await api.post('/auth/register', {
-        name,
-        email,
-        password
+      const response = await api.post("/conversations/", {
+        title: "Cloud Security AI Chat",
+        user_id: user?.id || 1,
       });
-      await login(email, password);
-      return response.data;
+
+      setConversationId(response.data.id);
+
+      return response.data.id;
+
     } catch (error) {
-      throw new Error(error.response?.data?.detail || 'Registration failed');
+      console.error("Conversation Error:", error);
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-    delete api.defaults.headers.common['Authorization'];
+
+  // Send message to AI
+  const sendMessage = async () => {
+
+    if (!message.trim()) return;
+
+
+    setLoading(true);
+
+    const userMessage = {
+      role: "user",
+      content: message
+    };
+
+
+    setChat((prev) => [
+      ...prev,
+      userMessage
+    ]);
+
+
+    try {
+
+      let id = conversationId;
+
+
+      if (!id) {
+        id = await createConversation();
+      }
+
+
+      const response = await api.post("/ai/chat", {
+
+        message: message,
+
+        conversation_id: id,
+
+        user_id: user?.id || 1
+
+      });
+
+
+
+      const aiMessage = {
+
+        role: "assistant",
+
+        content: response.data.response
+
+      };
+
+
+      setChat((prev)=>[
+        ...prev,
+        aiMessage
+      ]);
+
+
+
+    } catch(error){
+
+      console.error(error);
+
+
+      setChat((prev)=>[
+        ...prev,
+        {
+          role:"assistant",
+          content:"❌ Error connecting to AI"
+        }
+      ]);
+
+    }
+
+
+    setMessage("");
+
+    setLoading(false);
+
   };
 
-  const value = {
-    user,
-    loading,
-    token,
-    login,
-    register,
-    logout,
-    isAuthenticated: !!user
-  };
+
 
   return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+
+    <div className="min-h-screen bg-slate-950 text-white p-6">
+
+
+      <div className="flex justify-between items-center mb-8">
+
+
+        <div>
+
+          <h1 className="text-3xl font-bold">
+            SCORE AI Dashboard
+          </h1>
+
+
+          <p className="text-gray-400">
+            Cloud Security AI Assistant
+          </p>
+
+        </div>
+
+
+
+        <button
+
+          onClick={logout}
+
+          className="bg-red-600 px-4 py-2 rounded"
+
+        >
+          Logout
+        </button>
+
+
+      </div>
+
+
+
+
+
+      <div className="max-w-4xl mx-auto">
+
+
+        <div className="bg-slate-900 rounded-xl p-5 h-[500px] overflow-y-auto">
+
+
+          {chat.length === 0 && (
+
+            <p className="text-gray-400 text-center">
+
+              Ask SCORE AI anything about cloud security...
+
+            </p>
+
+          )}
+
+
+
+          {chat.map((item,index)=>(
+
+
+            <div
+
+              key={index}
+
+              className={`mb-4 p-3 rounded-lg ${
+                
+                item.role==="user"
+
+                ? "bg-blue-600 ml-auto"
+
+                : "bg-slate-700"
+
+              } max-w-[80%]`}
+
+            >
+
+              <b>
+
+                {item.role==="user"
+                  ?"You"
+                  :"SCORE AI"}
+
+              </b>
+
+
+              <p className="mt-1 whitespace-pre-wrap">
+
+                {item.content}
+
+              </p>
+
+
+            </div>
+
+
+          ))}
+
+
+
+        </div>
+
+
+
+
+
+
+        <div className="flex gap-3 mt-5">
+
+
+          <input
+
+            value={message}
+
+            onChange={(e)=>setMessage(e.target.value)}
+
+            onKeyDown={(e)=>{
+
+              if(e.key==="Enter")
+                sendMessage();
+
+            }}
+
+            placeholder="Ask about cloud security..."
+
+            className="flex-1 p-3 rounded bg-slate-800 text-white"
+
+          />
+
+
+
+          <button
+
+            onClick={sendMessage}
+
+            disabled={loading}
+
+            className="bg-blue-600 px-6 rounded"
+
+          >
+
+            {loading ? "Thinking..." : "Send"}
+
+          </button>
+
+
+        </div>
+
+
+
+      </div>
+
+
+    </div>
+
   );
-};
+
+}
+
+
+export default Dashboard;
